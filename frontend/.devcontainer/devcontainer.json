@@ -1,0 +1,17 @@
+{
+  "name": "Next.js Development",
+  "dockerComposeFile": "../../compose.yml",
+  "service": "frontend",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint", // ESLint
+        "esbenp.prettier-vscode", // Prettier
+        "formulahendry.auto-rename-tag", // Auto Rename Tag
+        "bradlc.vscode-tailwindcss" // Tailwind CSS IntelliSense
+      ]
+    }
+  },
+  "postCreateCommand": "npm install"
+}

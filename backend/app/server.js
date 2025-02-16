@@ -4,6 +4,8 @@ const app = express();
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const { withAccelerate } = require("@prisma/extension-accelerate");
+const { Webhook } = require("svix");
+const { env } = require("process");
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
@@ -22,16 +24,16 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-app.post("/api/auth/register", async (req, res) => {
-  const { id, username } = req.body;
-  const user = await prisma.user.create({
-    data: {
-      id,
-      username,
-    },
-  });
-
-  res.res({ user });
+app.post("/api/webhooks/user", async (req, res) => {
+  try {
+    const webhook = new Webhook(process.env.SIGNING_SECRET);
+    const evt = webhook.verify(JSON.stringify(req.body), req.headers);
+    console.log("✅ Webhook verified successfully:", evt);
+    res.status(200).send("Webhook received! oh yes!");
+  } catch (error) {
+    console.log(error);
+    res.status(400).send("Invalid signature!! oh no!");
+  }
 });
 
 app.get("/api/hello", (req, res) => {

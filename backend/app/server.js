@@ -53,7 +53,7 @@ app.post("/api/webhooks/user", async (req, res) => {
 app.get("/api/clipboards/get_boards", async (req, res) => {
   try {
     const { userId } = req.body;
-    const clipboards = prisma.clipBoard.findMany({
+    const clipboards = await prisma.clipBoard.findMany({
       where: {
         authorId: userId,
       },

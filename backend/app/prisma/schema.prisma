@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id String @id //clerkのidを使う
-  username String?
+  id         String      @id
+  username   String
   clipboards ClipBoard[]
 }
 
 model ClipBoard {
-  id String @id @default(uuid())
-  title String
-  content String?
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id       String  @id @default(uuid())
+  title    String
+  content  String?
   authorId String
-  isHidden Boolean @default(false)//contentをマスキングするか
+  isHidden Boolean @default(false)
+  author   User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }

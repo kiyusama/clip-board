@@ -9,7 +9,8 @@
         "dbaeumer.vscode-eslint", // ESLint
         "esbenp.prettier-vscode", // Prettier
         "formulahendry.auto-rename-tag", // Auto Rename Tag
-        "bradlc.vscode-tailwindcss" // Tailwind CSS IntelliSense
+        "bradlc.vscode-tailwindcss", // Tailwind CSS IntelliSense
+        "Prisma.prisma"
       ]
     }
   },

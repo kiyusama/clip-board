@@ -12,6 +12,7 @@
   "dependencies": {
     "@prisma/client": "^6.3.1",
     "cors": "^2.8.5",
+    "esbuild": "^0.25.0",
     "express": "^4.21.2",
     "svix": "^1.57.0"
   },
@@ -21,7 +22,7 @@
     "nodemon": "^3.1.9",
     "prisma": "^6.3.1",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.2",
+    "tsx": "^3.12.10",
     "typescript": "^5.7.3"
   }
 }

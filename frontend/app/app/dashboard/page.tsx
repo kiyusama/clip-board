@@ -25,12 +25,24 @@ export default function Example() {
     fetchBoards();
   }, [user?.id]);
 
+  const copyHandler = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <h1>Dashboard</h1>
       <ul>
         {clipBoards.map((clipboard: BoardType) => (
-          <li key={clipboard.id}>{clipboard.content}</li>
+          <li key={clipboard.id}>
+            <input type="text" value={clipboard.content} />
+            {clipboard.content}
+            <button onClick={() => copyHandler(clipboard.content)}>copy</button>
+          </li>
         ))}
       </ul>
     </>

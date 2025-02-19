@@ -7,16 +7,17 @@ import { BoardType } from "@/types";
 
 export default function Example() {
   const { isSignedIn, user, isLoaded } = useUser();
-  const [clipBoards, setClipBoards] = useState<BoardType[]>([]);
+  const [clipboards, setClipboards] = useState<BoardType[]>([]);
 
   useEffect(() => {
+    //clipboards一覧を取得
     const fetchBoards = async () => {
       try {
         const response = await apiClient.get("clipboards/get_boards", {
           params: { userId: user?.id },
         });
 
-        setClipBoards(response.data);
+        setClipboards(response.data);
       } catch (error) {
         console.log(error);
       }
@@ -24,6 +25,19 @@ export default function Example() {
 
     fetchBoards();
   }, [user?.id]);
+
+  //clipboardをアップデート
+  const updateClipboard = async () => {
+    try {
+      const response = await apiClient.put("/clipboards/update_boards", {
+        clipboards,
+      });
+
+      setClipboards(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   //テキストコピーを行う
   const copyHandler = async (content: string) => {
@@ -39,17 +53,17 @@ export default function Example() {
     id: string,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const updatedBoards = clipBoards.map((board: BoardType) =>
+    const updatedBoards = clipboards.map((board: BoardType) =>
       board.id === id ? { ...board, content: e.target.value } : board
     );
-    setClipBoards(updatedBoards);
+    setClipboards(updatedBoards);
   };
 
   return (
     <>
       <h1>Dashboard</h1>
       <ul>
-        {clipBoards.map((clipboard: BoardType) => (
+        {clipboards.map((clipboard: BoardType) => (
           <li key={clipboard.id}>
             <input
               type="text"
@@ -61,6 +75,7 @@ export default function Example() {
           </li>
         ))}
       </ul>
+      <button onClick={() => updateClipboard()}>update</button>
     </>
   );
 }

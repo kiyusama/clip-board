@@ -65,3 +65,32 @@ app.get("/api/clipboards/get_boards", async (req, res) => {
     res.status(400);
   }
 });
+
+//clipboardsを更新
+app.put("/api/clipboards/update_boards", async (req, res) => {
+  try {
+    const { clipboards } = req.body;
+    const updated_boards = [];
+    for (const board of clipboards) {
+      const updated_board = await prisma.clipBoard.update({
+        where: {
+          id: board.id,
+        },
+        data: {
+          title: board.title,
+          content: board.content,
+          isHiden: board.isHiden,
+        },
+        // create: {
+        //   title: "title",
+        // },
+      });
+      updated_boards.push(updated_board);
+    }
+
+    res.json(updated_boards);
+  } catch (error) {
+    console.log(error);
+    res.status(400);
+  }
+});

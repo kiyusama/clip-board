@@ -2,12 +2,12 @@
 
 import { useUser } from "@clerk/nextjs";
 import apiClient from "@/lib/apiClient";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BoardType } from "@/types";
 
 export default function Example() {
   const { isSignedIn, user, isLoaded } = useUser();
-  const [clipBoards, setClipBoards] = useState([]);
+  const [clipBoards, setClipBoards] = useState<BoardType[]>([]);
 
   useEffect(() => {
     const fetchBoards = async () => {
@@ -25,6 +25,7 @@ export default function Example() {
     fetchBoards();
   }, [user?.id]);
 
+  //テキストコピーを行う
   const copyHandler = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -33,13 +34,28 @@ export default function Example() {
     }
   };
 
+  // useStateの要素をinputに応じて逐一変化させるため必要
+  const changeHandler = (
+    id: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const updatedBoards = clipBoards.map((board: BoardType) =>
+      board.id === id ? { ...board, content: e.target.value } : board
+    );
+    setClipBoards(updatedBoards);
+  };
+
   return (
     <>
       <h1>Dashboard</h1>
       <ul>
         {clipBoards.map((clipboard: BoardType) => (
           <li key={clipboard.id}>
-            <input type="text" value={clipboard.content} />
+            <input
+              type="text"
+              value={clipboard.content}
+              onChange={(e) => changeHandler(clipboard.id, e)}
+            />
             {clipboard.content}
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
           </li>

@@ -8,6 +8,7 @@ import { BoardType } from "@/types";
 export default function Example() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [clipboards, setClipboards] = useState<BoardType[]>([]);
+  const [currentBoards, setCurrentBoards] = useState<BoardType[]>([]);
 
   useEffect(() => {
     //clipboards一覧を取得
@@ -17,6 +18,16 @@ export default function Example() {
           params: { userId: user?.id },
         });
 
+        setCurrentBoards(response.data);
+
+        if (JSON.stringify(clipboards) !== JSON.stringify(currentBoards)) {
+          alert("changed");
+        }
+        console.log("board");
+        console.log(clipboards);
+        console.log("current");
+        console.log(currentBoards);
+
         setClipboards(response.data);
       } catch (error) {
         console.log(error);
@@ -24,20 +35,28 @@ export default function Example() {
     };
 
     fetchBoards();
-  }, [user?.id]);
+    // １秒ごとに取得
+    const timeId = setInterval(() => {
+      fetchBoards();
+    }, 1000);
 
-  //clipboardをアップデート
-  const updateClipboard = async () => {
-    try {
-      const response = await apiClient.put("/clipboards/update_boards", {
-        clipboards,
-      });
+    return () => clearInterval(timeId);
+  }, []);
 
-      setClipboards(response.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  useEffect(() => {
+    //clipboardをアップデート
+    const updateClipboard = async () => {
+      try {
+        const response = await apiClient.put("/clipboards/update_boards", {
+          clipboards,
+        });
+
+        setClipboards(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+  }, []);
 
   //テキストコピーを行う
   const copyHandler = async (content: string) => {
@@ -70,12 +89,10 @@ export default function Example() {
               value={clipboard.content}
               onChange={(e) => changeHandler(clipboard.id, e)}
             />
-            {clipboard.content}
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
           </li>
         ))}
       </ul>
-      <button onClick={() => updateClipboard()}>update</button>
     </>
   );
 }

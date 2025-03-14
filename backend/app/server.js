@@ -44,8 +44,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("send_message", (data) => {
-    io.emit("receive_message", data); //全ユーザに送信
+  socket.on("update_boards", (data) => {
+    io.emit("receive_update", data); //全ユーザに送信
   });
 
   socket.on("disconnect", () => {

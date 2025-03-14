@@ -22,17 +22,13 @@ export default function Dashboard() {
       setClipboards(data);
     });
 
+    //更新の受け取り
+    socket.on("receive_update", (data) => {
+      setClipboards(data);
+    });
+
     return () => socket.disconnect();
   }, []);
-
-  //テキストコピーを行う
-  const copyHandler = async (content: string) => {
-    try {
-      await navigator.clipboard.writeText(content);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   // useStateの要素をinputに応じて逐一変化させるため必要
   const changeHandler = (
@@ -42,7 +38,19 @@ export default function Dashboard() {
     const updatedBoards = clipboards.map((board: BoardType) =>
       board.id === id ? { ...board, content: e.target.value } : board
     );
-    setClipboards(updatedBoards);
+
+    socket.emit("update_boards", updatedBoards);
+
+    //setClipboards(updatedBoards);
+  };
+
+  //テキストコピーを行う
+  const copyHandler = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

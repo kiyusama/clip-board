@@ -4,25 +4,61 @@ const app = express();
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const { Webhook } = require("svix");
+const { Server } = require("socket.io");
+const http = require("http");
+
+// ポート番号を設定
+const PORT = process.env.LISTENING_PORT;
 
 const prisma = new PrismaClient();
 
-// ポート番号を設定
-const PORT = 8000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "PUT", "POST"],
+  },
+});
 
 app.use(cors());
 app.use(express.json());
 
-// サーバーを起動
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+//接続を確立
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("send_userId", async ({ userId }) => {
+    socket.userId = userId;
+
+    try {
+      const clipboards = await prisma.clipBoard.findMany({
+        where: {
+          authorId: socket.userId,
+        },
+      });
+
+      socket.emit("receive_boards", clipboards);
+    } catch (error) {
+      console.log(error);
+      socket.emit("receive_boards", []); // エラー時には空配列を返す
+    }
+  });
+
+  socket.on("send_message", (data) => {
+    io.emit("receive_message", data); //全ユーザに送信
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected: ", socket.id);
+  });
 });
 
-// テスト用
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
+//サーバを起動
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost: ${PORT}`);
 });
 
+// clerkからWebhookでユーザー情報取得
 app.post("/api/webhooks/user", async (req, res) => {
   try {
     const webhook = new Webhook(process.env.SIGNING_SECRET);
@@ -50,6 +86,9 @@ app.post("/api/webhooks/user", async (req, res) => {
   }
 });
 
+//REST APIの場合
+//
+//あとで削除
 app.get("/api/clipboards/get_boards", async (req, res) => {
   try {
     const { userId } = req.body;

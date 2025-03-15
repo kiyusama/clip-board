@@ -118,13 +118,14 @@ app.put("/api/clipboards/update_boards", async (req, res) => {
         data: {
           title: board.title,
           content: board.content,
-          isHiden: board.isHiden,
+          isHidden: board.isHidden,
         },
         // create: {
         //   title: "title",
         // },
       });
       updated_boards.push(updated_board);
+      res.json(updated_boards);
     }
 
     res.json(updated_boards);

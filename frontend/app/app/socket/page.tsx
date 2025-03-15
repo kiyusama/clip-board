@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import io from "socket.io-client";
 import { BoardType } from "@/types";
+import debounce from "lodash/debounce";
+import apiClient from "@/lib/apiClient";
 
 export default function Dashboard() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -40,9 +42,29 @@ export default function Dashboard() {
     );
 
     socket.emit("update_boards", updatedBoards);
-
-    //setClipboards(updatedBoards);
+    handleDebounce(updatedBoards);
   };
+
+  //デバウンス処理
+  const handleDebounce = useCallback(
+    debounce(async (clipboards) => {
+      try {
+        alert("start");
+        alert(JSON.stringify(clipboards));
+
+        const response = await apiClient.put("/api/clipboards/update_boards", {
+          clipboards,
+        });
+
+        alert("end");
+
+        setClipboards(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }, 1000),
+    []
+  );
 
   //テキストコピーを行う
   const copyHandler = async (content: string) => {

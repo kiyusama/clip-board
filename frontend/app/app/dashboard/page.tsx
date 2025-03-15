@@ -47,9 +47,11 @@ export default function Example() {
     //clipboardをアップデート
     const updateClipboard = async () => {
       try {
+        alert("start");
         const response = await apiClient.put("/clipboards/update_boards", {
           clipboards,
         });
+        alert("end");
 
         setClipboards(response.data);
       } catch (error) {
@@ -90,6 +92,7 @@ export default function Example() {
               onChange={(e) => changeHandler(clipboard.id, e)}
             />
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
+            <button onClick={() => updateClipboards()}>update</button>
           </li>
         ))}
       </ul>

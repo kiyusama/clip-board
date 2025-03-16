@@ -2,20 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import io from "socket.io-client";
 import { BoardType } from "@/types";
 import debounce from "lodash/debounce";
 import apiClient from "@/lib/apiClient";
+import { socket } from "@/lib/socket";
 
 export default function Dashboard() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [clipboards, setClipboards] = useState<BoardType[]>([]);
 
-  //backendへ接続
-  const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL);
-
   //初回接続時
   useEffect(() => {
+    //userIdを入手できるまで待機
+    if (!user?.id) {
+      return;
+    }
+
     //userIdをサーバへ送る
     const userId = user?.id;
     socket.emit("send_userId", { userId });
@@ -29,8 +31,11 @@ export default function Dashboard() {
       setClipboards(data);
     });
 
-    return () => socket.disconnect();
-  }, []);
+    return () => {
+      socket.off("receive_boards");
+      socket.off("receive_update");
+    };
+  }, [user?.id]);
 
   // useStateの要素をinputに応じて逐一変化させるため必要
   const changeHandler = (
@@ -49,16 +54,12 @@ export default function Dashboard() {
   const handleDebounce = useCallback(
     debounce(async (clipboards) => {
       try {
-        alert("start");
-        alert(JSON.stringify(clipboards));
-
         const response = await apiClient.put("/api/clipboards/update_boards", {
           clipboards,
         });
 
-        alert("end");
-
         setClipboards(response.data);
+        alert("ok");
       } catch (error) {
         console.log(error);
       }

@@ -26,11 +26,6 @@ export default function Dashboard() {
       setClipboards(data);
     });
 
-    //更新の受け取り
-    socket.on("receive_update", (data) => {
-      setClipboards(data);
-    });
-
     return () => {
       socket.off("receive_boards");
       socket.off("receive_update");
@@ -46,8 +41,8 @@ export default function Dashboard() {
       board.id === id ? { ...board, content: e.target.value } : board
     );
 
-    socket.emit("update_boards", updatedBoards);
     handleDebounce(updatedBoards);
+    socket.emit("update_boards", updatedBoards);
   };
 
   //デバウンス処理
@@ -87,7 +82,6 @@ export default function Dashboard() {
               value={clipboard.content}
               onChange={(e) => changeHandler(clipboard.id, e)}
             />
-            {clipboard.content}
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
           </li>
         ))}

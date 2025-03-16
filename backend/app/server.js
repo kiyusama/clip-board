@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update_boards", (data) => {
-    io.emit("receive_update", data); //全ユーザに送信
+    io.emit("receive_boards", data); //全ユーザに送信
   });
 
   socket.on("disconnect", () => {
@@ -87,8 +87,6 @@ app.post("/api/webhooks/user", async (req, res) => {
 });
 
 //REST APIの場合
-//
-//あとで削除
 app.get("/api/clipboards/get_boards", async (req, res) => {
   try {
     const { userId } = req.body;
@@ -125,7 +123,6 @@ app.put("/api/clipboards/update_boards", async (req, res) => {
         // },
       });
       updated_boards.push(updated_board);
-      res.json(updated_boards);
     }
 
     res.json(updated_boards);

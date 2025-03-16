@@ -46,11 +46,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  //あとで
-  socket.on("delete_board", (data) => {
-    io.emit("receive_boards", data);
-  });
-
   socket.on("update_boards", (data) => {
     io.emit("receive_boards", data); //全ユーザに送信
   });
@@ -93,7 +88,6 @@ app.post("/api/webhooks/user", async (req, res) => {
   }
 });
 
-//REST APIの場合
 app.get("/api/clipboards/get_boards", async (req, res) => {
   try {
     const { userId } = req.body;
@@ -121,7 +115,13 @@ app.post("/api/clipboards/create_board", async (req, res) => {
       },
     });
 
-    res.json(newBoard);
+    const allBoards = await prisma.clipBoard.findMany({
+      where: {
+        authorId: userId,
+      },
+    });
+
+    res.json(allBoards);
   } catch (error) {
     console.log(error);
     res.status(400);
@@ -131,13 +131,20 @@ app.post("/api/clipboards/create_board", async (req, res) => {
 //boardの削除
 app.delete("/api/clipboards/delete_board/:id", async (req, res) => {
   try {
+    const { userId } = req.body;
     const deletedBoard = await prisma.clipBoard.delete({
       where: {
         id: req.params.id,
       },
     });
 
-    res.json(deletedBoard);
+    const allBoards = await prisma.clipBoard.findMany({
+      where: {
+        authorId: userId,
+      },
+    });
+
+    res.json(allBoards);
   } catch (error) {
     console.log(error);
     res.status(400);

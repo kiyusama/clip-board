@@ -54,7 +54,6 @@ export default function Dashboard() {
         });
 
         setClipboards(response.data);
-        alert("ok");
       } catch (error) {
         console.log(error);
       }
@@ -68,6 +67,8 @@ export default function Dashboard() {
       const response = await apiClient.post("/api/clipboards/create_board", {
         userId: user?.id,
       });
+      setClipboards(response.data);
+      socket.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }
@@ -76,11 +77,13 @@ export default function Dashboard() {
   //boardの削除
   const deleteBoardHandler = async (id: string) => {
     try {
-      alert("a");
       const response = await apiClient.delete(
-        `/api/clipboards/delete_board/${id}`
+        `/api/clipboards/delete_board/${id}`,
+        { userId: user?.id }
       );
-      alert("b");
+
+      setClipboards(response.data);
+      socket.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }

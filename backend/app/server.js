@@ -6,6 +6,7 @@ const { PrismaClient } = require("@prisma/client");
 const { Webhook } = require("svix");
 const { Server } = require("socket.io");
 const http = require("http");
+const e = require("express");
 
 // ポート番号を設定
 const PORT = process.env.LISTENING_PORT;
@@ -16,7 +17,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL,
-    methods: ["GET", "PUT", "POST"],
+    methods: ["GET", "PUT", "POST", "DELETE"],
   },
 });
 
@@ -27,6 +28,7 @@ app.use(express.json());
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
+  // 初回の処理
   socket.on("send_userId", async ({ userId }) => {
     socket.userId = userId;
 
@@ -42,6 +44,11 @@ io.on("connection", (socket) => {
       console.log(error);
       socket.emit("receive_boards", []); // エラー時には空配列を返す
     }
+  });
+
+  //あとで
+  socket.on("delete_board", (data) => {
+    io.emit("receive_boards", data);
   });
 
   socket.on("update_boards", (data) => {
@@ -97,6 +104,40 @@ app.get("/api/clipboards/get_boards", async (req, res) => {
     });
 
     res.json(clipboards);
+  } catch (error) {
+    console.log(error);
+    res.status(400);
+  }
+});
+
+//新規board作成
+app.post("/api/clipboards/create_board", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const newBoard = await prisma.clipBoard.create({
+      data: {
+        title: "title",
+        authorId: userId,
+      },
+    });
+
+    res.json(newBoard);
+  } catch (error) {
+    console.log(error);
+    res.status(400);
+  }
+});
+
+//boardの削除
+app.delete("/api/clipboards/delete_board/:id", async (req, res) => {
+  try {
+    const deletedBoard = await prisma.clipBoard.delete({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    res.json(deletedBoard);
   } catch (error) {
     console.log(error);
     res.status(400);

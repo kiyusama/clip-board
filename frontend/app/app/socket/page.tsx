@@ -62,6 +62,30 @@ export default function Dashboard() {
     []
   );
 
+  //新規clipboard作成
+  const createBoardHandler = async () => {
+    try {
+      const response = await apiClient.post("/api/clipboards/create_board", {
+        userId: user?.id,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  //boardの削除
+  const deleteBoardHandler = async (id: string) => {
+    try {
+      alert("a");
+      const response = await apiClient.delete(
+        `/api/clipboards/delete_board/${id}`
+      );
+      alert("b");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   //テキストコピーを行う
   const copyHandler = async (content: string) => {
     try {
@@ -83,9 +107,13 @@ export default function Dashboard() {
               onChange={(e) => changeHandler(clipboard.id, e)}
             />
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
+            <button onClick={() => deleteBoardHandler(clipboard.id)}>
+              delete
+            </button>
           </li>
         ))}
       </ul>
+      <button onClick={() => createBoardHandler()}>create</button>
     </>
   );
 }

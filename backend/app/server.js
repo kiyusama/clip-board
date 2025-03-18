@@ -21,6 +21,9 @@ const io = new Server(server, {
   },
 });
 
+//authorizationを検査する
+//io.engine.use(ClerkExpressRequireAuth());
+
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
@@ -157,7 +160,7 @@ app.delete(
 );
 
 //clipboardsを更新
-app.put("/api/clipboards/update_boards", async (req, res) => {
+app.put("/api/clipboards/update_boards", requireAuth(), async (req, res) => {
   try {
     const { clipboards } = req.body;
     const updated_boards = [];

@@ -14,22 +14,26 @@ export default function Dashboard() {
 
   //初回接続時
   useEffect(() => {
-    //userIdを入手できるまで待機
-    if (!user?.id) {
-      return;
-    }
+    const setupSocket = async () => {
+      //userIdを入手できるまで待機
+      if (!user?.id) {
+        return;
+      }
 
-    //userIdをサーバへ送る
-    const userId = user?.id;
+      //userIdをサーバへ送る
+      const userId = user?.id;
 
-    //JWTでtoken認証の実装忘れずに
-    // const token = await getToken();
-    // socket.auth = { token };
-    socket.emit("send_userId", { userId });
+      //JWTでtoken認証の実装忘れずに
+      // const token = await getToken();
+      // socket.auth = { token };
+      socket.emit("send_userId", { userId });
 
-    socket.on("receive_boards", (data) => {
-      setClipboards(data);
-    });
+      socket.on("receive_boards", (data) => {
+        setClipboards(data);
+      });
+    };
+
+    setupSocket();
 
     return () => {
       socket.off("receive_boards");

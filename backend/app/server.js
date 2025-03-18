@@ -6,7 +6,7 @@ const { PrismaClient } = require("@prisma/client");
 const { Webhook } = require("svix");
 const { Server } = require("socket.io");
 const http = require("http");
-const e = require("express");
+const { clerkMiddleware, getAuth, requireAuth } = require("@clerk/express");
 
 // ポート番号を設定
 const PORT = process.env.LISTENING_PORT;
@@ -23,6 +23,7 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware());
 
 //接続を確立
 io.on("connection", (socket) => {
@@ -88,9 +89,9 @@ app.post("/api/webhooks/user", async (req, res) => {
   }
 });
 
-app.get("/api/clipboards/get_boards", async (req, res) => {
+app.get("/api/clipboards/get_boards", requireAuth(), async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = getAuth(req);
     const clipboards = await prisma.clipBoard.findMany({
       where: {
         authorId: userId,
@@ -105,10 +106,10 @@ app.get("/api/clipboards/get_boards", async (req, res) => {
 });
 
 //新規board作成
-app.post("/api/clipboards/create_board", async (req, res) => {
+app.post("/api/clipboards/create_board", requireAuth(), async (req, res) => {
   try {
-    const { userId } = req.body;
-    const newBoard = await prisma.clipBoard.create({
+    const { userId } = getAuth(req);
+    await prisma.clipBoard.create({
       data: {
         title: "title",
         authorId: userId,
@@ -129,27 +130,31 @@ app.post("/api/clipboards/create_board", async (req, res) => {
 });
 
 //boardの削除
-app.delete("/api/clipboards/delete_board/:id", async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const deletedBoard = await prisma.clipBoard.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
+app.delete(
+  "/api/clipboards/delete_board/:id",
+  requireAuth(),
+  async (req, res) => {
+    try {
+      const { userId } = getAuth(req);
+      await prisma.clipBoard.delete({
+        where: {
+          id: req.params.id,
+        },
+      });
 
-    const allBoards = await prisma.clipBoard.findMany({
-      where: {
-        authorId: userId,
-      },
-    });
+      const allBoards = await prisma.clipBoard.findMany({
+        where: {
+          authorId: userId,
+        },
+      });
 
-    res.json(allBoards);
-  } catch (error) {
-    console.log(error);
-    res.status(400);
+      res.json(allBoards);
+    } catch (error) {
+      console.log(error);
+      res.status(400);
+    }
   }
-});
+);
 
 //clipboardsを更新
 app.put("/api/clipboards/update_boards", async (req, res) => {
@@ -166,9 +171,6 @@ app.put("/api/clipboards/update_boards", async (req, res) => {
           content: board.content,
           isHidden: board.isHidden,
         },
-        // create: {
-        //   title: "title",
-        // },
       });
       updated_boards.push(updated_board);
     }

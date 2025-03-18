@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { BoardType } from "@/types";
 import debounce from "lodash/debounce";
 import apiClient from "@/lib/apiClient";
@@ -10,6 +10,7 @@ import { socket } from "@/lib/socket";
 export default function Dashboard() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [clipboards, setClipboards] = useState<BoardType[]>([]);
+  const { getToken } = useAuth();
 
   //初回接続時
   useEffect(() => {
@@ -20,6 +21,10 @@ export default function Dashboard() {
 
     //userIdをサーバへ送る
     const userId = user?.id;
+
+    //JWTでtoken認証の実装忘れずに
+    // const token = await getToken();
+    // socket.auth = { token };
     socket.emit("send_userId", { userId });
 
     socket.on("receive_boards", (data) => {
@@ -28,7 +33,6 @@ export default function Dashboard() {
 
     return () => {
       socket.off("receive_boards");
-      socket.off("receive_update");
     };
   }, [user?.id]);
 
@@ -47,11 +51,20 @@ export default function Dashboard() {
 
   //デバウンス処理
   const handleDebounce = useCallback(
-    debounce(async (clipboards) => {
+    debounce(async (clipboards: BoardType[]) => {
       try {
-        const response = await apiClient.put("/api/clipboards/update_boards", {
-          clipboards,
-        });
+        const token = await getToken();
+        const response = await apiClient.put(
+          "/api/clipboards/update_boards",
+          {
+            clipboards,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         setClipboards(response.data);
       } catch (error) {
@@ -64,9 +77,16 @@ export default function Dashboard() {
   //新規clipboard作成
   const createBoardHandler = async () => {
     try {
-      const response = await apiClient.post("/api/clipboards/create_board", {
-        userId: user?.id,
-      });
+      const token = await getToken();
+      const response = await apiClient.post(
+        "/api/clipboards/create_board",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setClipboards(response.data);
       socket.emit("update_boards", response.data);
     } catch (error) {
@@ -77,9 +97,14 @@ export default function Dashboard() {
   //boardの削除
   const deleteBoardHandler = async (id: string) => {
     try {
+      const token = await getToken();
       const response = await apiClient.delete(
         `/api/clipboards/delete_board/${id}`,
-        { userId: user?.id }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setClipboards(response.data);
@@ -106,7 +131,7 @@ export default function Dashboard() {
           <li key={clipboard.id}>
             <input
               type="text"
-              value={clipboard.content}
+              value={clipboard.content ?? ""} //null時はから配列を指定
               onChange={(e) => changeHandler(clipboard.id, e)}
             />
             <button onClick={() => copyHandler(clipboard.content)}>copy</button>
@@ -116,7 +141,7 @@ export default function Dashboard() {
           </li>
         ))}
       </ul>
-      <button onClick={() => createBoardHandler()}>create</button>
+      <button onClick={createBoardHandler}>create</button>
     </>
   );
 }

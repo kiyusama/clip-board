@@ -45,7 +45,7 @@ export default function Dashboard() {
       if (socketRef.current) {
         socketRef.current.off("receive_boards");
         socketRef.current.disconnect();
-        socketRef.current = null; // メモリリークを防ぐためにリセット
+        socketRef.current = null;
       }
     };
   }, [user?.id]);
@@ -60,7 +60,7 @@ export default function Dashboard() {
     );
 
     handleDebounce(updatedBoards);
-    socketRef.current.emit("update_boards", updatedBoards);
+    socketRef.current?.emit("update_boards", updatedBoards);
   };
 
   //デバウンス処理
@@ -102,7 +102,7 @@ export default function Dashboard() {
         }
       );
       setClipboards(response.data);
-      socketRef.current.emit("update_boards", response.data);
+      socketRef.current?.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }
@@ -122,7 +122,7 @@ export default function Dashboard() {
       );
 
       setClipboards(response.data);
-      socketRef.current.emit("update_boards", response.data);
+      socketRef.current?.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }
@@ -143,6 +143,8 @@ export default function Dashboard() {
       <ul>
         {clipboards.map((clipboard: BoardType) => (
           <li key={clipboard.id}>
+            {clipboard.title}
+            <h1></h1>
             <input
               type="text"
               value={clipboard.content ?? ""} //null時はから配列を指定

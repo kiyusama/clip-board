@@ -21,8 +21,8 @@ const io = new Server(server, {
   },
 });
 
-//authorizationを検査する
-//io.engine.use(ClerkExpressRequireAuth());
+//socketのauthを検査
+io.engine.use(requireAuth());
 
 app.use(cors());
 app.use(express.json());

@@ -1,17 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { BoardType } from "@/types";
 import debounce from "lodash/debounce";
 import apiClient from "@/lib/apiClient";
-import { socket } from "@/lib/socket";
+import io from "socket.io-client";
+import { Socket } from "socket.io-client";
 
 export default function Dashboard() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [clipboards, setClipboards] = useState<BoardType[]>([]);
   const { getToken } = useAuth();
-
+  const socketRef = useRef<Socket | null>(null);
   //初回接続時
   useEffect(() => {
     const setupSocket = async () => {
@@ -20,15 +21,20 @@ export default function Dashboard() {
         return;
       }
 
+      const token = await getToken();
+      socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
+        extraHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       //userIdをサーバへ送る
       const userId = user?.id;
 
       //JWTでtoken認証の実装忘れずに
-      // const token = await getToken();
-      // socket.auth = { token };
-      socket.emit("send_userId", { userId });
+      socketRef.current.emit("send_userId", { userId });
 
-      socket.on("receive_boards", (data) => {
+      socketRef.current.on("receive_boards", (data) => {
         setClipboards(data);
       });
     };
@@ -36,7 +42,11 @@ export default function Dashboard() {
     setupSocket();
 
     return () => {
-      socket.off("receive_boards");
+      if (socketRef.current) {
+        socketRef.current.off("receive_boards");
+        socketRef.current.disconnect();
+        socketRef.current = null; // メモリリークを防ぐためにリセット
+      }
     };
   }, [user?.id]);
 
@@ -50,7 +60,7 @@ export default function Dashboard() {
     );
 
     handleDebounce(updatedBoards);
-    socket.emit("update_boards", updatedBoards);
+    socketRef.current.emit("update_boards", updatedBoards);
   };
 
   //デバウンス処理
@@ -92,7 +102,7 @@ export default function Dashboard() {
         }
       );
       setClipboards(response.data);
-      socket.emit("update_boards", response.data);
+      socketRef.current.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }
@@ -112,7 +122,7 @@ export default function Dashboard() {
       );
 
       setClipboards(response.data);
-      socket.emit("update_boards", response.data);
+      socketRef.current.emit("update_boards", response.data);
     } catch (error) {
       console.log(error);
     }
